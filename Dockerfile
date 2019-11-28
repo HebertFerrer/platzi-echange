@@ -1,13 +1,12 @@
 FROM node:13.1
 
-# Vue
-RUN npm install -g @vue/cli
-
-RUN npm install -g serve
-
-COPY [".", "/app"]
-
 WORKDIR /app
+
+COPY ["package*.json", "/app/"]
+
+RUN npm install
+
+COPY [".", "."]
 
 EXPOSE 8080
 EXPOSE 5000
