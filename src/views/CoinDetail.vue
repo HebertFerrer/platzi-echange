@@ -121,10 +121,8 @@ export default {
     },
 
     avg() {
-      let prices = this.history.map(h => parseFloat(h.priceUsd));
-      console.log(prices);
-
-      return (prices.reduce( (a,b) => a + b) / prices.length).toFixed(2);
+      const prices = this.history.map(h => parseFloat(h.priceUsd));
+      return (prices.reduce((a, b) => a + b) / prices.length).toFixed(2);
     },
   },
 };
