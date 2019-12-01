@@ -1,6 +1,14 @@
 <template>
   <div class="flex-col">
-    <template v-if="asset.id">
+    <div class="flex justify-center">
+      <bounce-loader
+        :loading="isLoading"
+        color="#68d391"
+        :size="100"
+      ></bounce-loader>
+    </div>
+
+    <template v-if="!isLoading">
       <div class="flex flex-col sm:flex-row justify-around items-center">
         <div class="flex flex-col items-center">
           <img
@@ -74,11 +82,51 @@
           <span class="text-xl"></span>
         </div>
       </div>
+
+      <line-chart
+        class="my-10"
+        :min="min"
+        :max="max"
+        :data="chartData"
+        :colors="['orange']"
+      ></line-chart>
+
+      <h3 class="text-xl my-10">Mejores ofertas de cambio</h3>
+      <table>
+        <tr
+          class="border-b"
+          v-for="market in markets"
+          :key="`${market.exhangeId}-${market.priceUsd}`"
+        >
+          <td>
+            <b>{{ market.exchangeId }}</b>
+          </td>
+          <td>{{ market.priceUsd | dollar }}</td>
+          <td>{{ market.baseSymbol }} / {{ market.quoteSymbol }}</td>
+          <td>
+            <px-button
+              v-if="!market.url"
+              :is-loading="market.isLoading"
+              @custom-click="getWebPage(market)"
+            >
+              Obtener Link
+            </px-button>
+            <a
+              :href="market.url"
+              class="hover:underline text-green-600"
+              target="_blank"
+              v-else
+              >{{ market.url }}</a
+            >
+          </td>
+        </tr>
+      </table>
     </template>
   </div>
 </template>
 
 <script>
+import PxButton from '@/components/PxButton';
 import api from '@/api.js';
 
 export default {
@@ -87,9 +135,13 @@ export default {
   data() {
     return {
       asset: {},
-      history: {},
+      history: [],
+      markets: [],
+      isLoading: false,
     };
   },
+
+  components: { PxButton },
 
   created() {
     this.getCoin();
@@ -98,12 +150,32 @@ export default {
   methods: {
     getCoin() {
       const id = this.$route.params.id;
-      Promise.all([api.getAsset(id), api.getAssetHistory(id)]).then(
-        ([asset, history]) => {
+
+      this.isLoading = true;
+      Promise.all([
+        api.getAsset(id),
+        api.getAssetHistory(id),
+        api.getMarkets(id),
+      ])
+        .then(([asset, history, markets]) => {
           this.asset = asset;
           this.history = history;
-        },
-      );
+          this.markets = markets;
+        })
+        .finally(() => (this.isLoading = false));
+    },
+
+    getWebPage(market) {
+      this.$set(market, 'isLoading', true);
+
+      api
+        .getExchange(market.exchangeId)
+        .then(res => {
+          this.$set(market, 'url', res.exchangeUrl);
+        })
+        .finally(() => {
+          this.$set(market, 'isLoading', false);
+        });
     },
   },
 
@@ -123,6 +195,10 @@ export default {
     avg() {
       const prices = this.history.map(h => parseFloat(h.priceUsd));
       return (prices.reduce((a, b) => a + b) / prices.length).toFixed(2);
+    },
+
+    chartData() {
+      return this.history.map(h => [h.date, parseFloat(h.priceUsd).toFixed(2)]);
     },
   },
 };
