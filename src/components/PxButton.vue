@@ -3,13 +3,10 @@
     @click="buttonClick"
     class="bg-transparent hover:bg-green-500 text-green-700 font-semibold hover:text-white py-2 px-2 border border-green-500 hover:border-transparent rounded"
   >
-    <slot v-if="!isLoading"></slot>
-    <beat-loader
-      :loading="isLoading"
-      v-show="isLoading"
-      color="#68b391"
-      :size="8"
-    ></beat-loader>
+    <beat-loader :loading="isLoading" color="#68b391" :size="8"></beat-loader>
+    <p v-show="!isLoading">
+      <slot></slot>
+    </p>
   </button>
 </template>
 

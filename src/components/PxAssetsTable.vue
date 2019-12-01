@@ -3,20 +3,29 @@
     <thead>
       <tr class="bg-gray-100 border-b-2 border-gray-400">
         <th></th>
-        <th>
-          <span>Ranking</span>
+        <th :class="order">
+          <span class="underline cursor-pointer" @click="reverseAssetsOrder()"
+            >Ranking</span
+          >
         </th>
         <th>Nombre</th>
         <th>Precio</th>
         <th>Cap. de Mercado</th>
         <th>Variación 24hs</th>
-        <td class="hidden sm:block"></td>
+        <td class="hidden sm:block">
+          <input
+            class="bg-gray-100 focus:outline-none border-b border-gray-400 py-2 px-4 block w-full appearance-none leading-normal"
+            type="text"
+            placeholder="Buscar..."
+            v-model="filter"
+          />
+        </td>
       </tr>
     </thead>
     <tbody>
       <tr
         class="border-b border-gray-200 hover:bg-gray-100 hover:bg-orange-100"
-        v-for="asset in assets"
+        v-for="asset in filteredAssets"
         :key="asset.id"
       >
         <td>
@@ -69,6 +78,13 @@ export default {
 
   components: { PxButton },
 
+  data() {
+    return {
+      filter: '',
+      order: 'up',
+    };
+  },
+
   props: {
     assets: {
       type: Array,
@@ -76,9 +92,24 @@ export default {
     },
   },
 
+  computed: {
+    filteredAssets() {
+      return this.assets.filter(
+        a =>
+          a.name.toLowerCase().includes(this.filter.toLowerCase()) ||
+          a.symbol.toLowerCase().includes(this.filter.toLowerCase()),
+      );
+    },
+  },
+
   methods: {
     click(id) {
       this.$router.push({ name: 'coin-detail', params: { id } });
+    },
+
+    reverseAssetsOrder() {
+      this.assets - this.assets.reverse();
+      this.order = this.order == 'up' ? 'down' : 'up';
     },
   },
 };
